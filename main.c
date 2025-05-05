@@ -167,8 +167,38 @@ int BillingSystem() {
     printf("Patient not found.\n");
     return 0;
 }
+int login() {
+
+    char username[20], password[20];
+    const char validUser[] = "admin";
+    const char validPass[] = "admin123";
+    int attempts = 3;
+
+    while (attempts--) {
+        printf("Login\nUsername: ");
+        fgets(username, sizeof(username), stdin);
+        username[strcspn(username, "\n")] = '\0';
+
+        printf("Password: ");
+        fgets(password, sizeof(password), stdin);
+        password[strcspn(password, "\n")] = '\0';
+
+        if (strcmp(username, validUser) == 0 && strcmp(password, validPass) == 0) {
+            printf("Login successful!\n");
+            return 1;
+        } else {
+            printf("Invalid credentials. Attempts left: %d\n", attempts);
+        }
+    }
+    printf("Too many failed attempts. Exiting.\n");
+    return 0;
+}
+
 
 int main() {
+    if (!login()) {
+        return 1; // Exit if login fails
+    }
     char input[20];
     int choice = 0;
     while (1) {
@@ -196,4 +226,3 @@ int main() {
     }
     return 0;
 }
-
