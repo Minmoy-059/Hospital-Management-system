@@ -43,7 +43,7 @@ int PatientRecords()
     printf("Enter age: ");
     fgets(ageStr, sizeof(ageStr), stdin);
     remove_newline(ageStr);
-    sscanf(ageStr, "%d", &age);
+    scanf(ageStr, "%d", &age);
 
     printf("Enter ailment: ");
     fgets(ailment, sizeof(ailment), stdin);
