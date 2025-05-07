@@ -9,15 +9,6 @@ void remove_newline(char* str) {
         }
     }
 }
-
-void update_status(char status[20])
-{
-    printf("\n Update patient status: ");
-    fgets(status, 20, stdin);
-    remove_newline(status);
-    printf("Updated status: %s\n", status);
-}
-
 int patientIds[100];
 char patientNames[100][50];
 char patientAges[100][4];
@@ -41,13 +32,13 @@ int PatientRecords()
     remove_newline(name);
 
     printf("Enter age: ");
-    fgets(ageStr, sizeof(ageStr), stdin);
-    remove_newline(ageStr);
-    scanf(ageStr, "%d", &age);
+    scanf("%d", &age);
+    while (getchar() != '\n');
 
     printf("Enter ailment: ");
     fgets(ailment, sizeof(ailment), stdin);
     remove_newline(ailment);
+
     printf("Enter doctor assigned: ");
     fgets(doctor, sizeof(doctor), stdin);
     remove_newline(doctor);
@@ -64,16 +55,15 @@ int PatientRecords()
     fgets(admittedDate, sizeof(admittedDate), stdin);
     remove_newline(admittedDate);
 
-    if (strcmp(status, "Discharged") == 0)
-    {
+    if (strcmp(status, "Discharged") == 0) {
         printf("Enter discharge date (YYYY-MM-DD): ");
         fgets(dischargedDate, sizeof(dischargedDate), stdin);
         remove_newline(dischargedDate);
     }
 
     patientIds[patientCount] = nextId++;
+    sprintf(patientAges[patientCount], "%d", age);
     strcpy(patientNames[patientCount], name);
-    strcpy(patientAges[patientCount], ageStr);
     strcpy(patientAilments[patientCount], ailment);
     strcpy(patientDoctors[patientCount], doctor);
     strcpy(patientStatus[patientCount], status);
@@ -95,31 +85,22 @@ int PatientRecords()
     patientCount++;
     return 0;
 }
-
-int compare_dates(const char *date1, const char *date2)
+void SearchFunctionality()
 {
-    int y1, m1, d1, y2, m2, d2;
-    scanf(date1, "%d-%d-%d", &y1, &m1, &d1);
-    scanf(date2, "%d-%d-%d", &y2, &m2, &d2);
-    if (y1 != y2) return y1 - y2;
-    if (m1 != m2) return m1 - m2;
-    return d1 - d2;
-}
-int SearchFunctionality()
-{
-    char name[50];
-    printf("\n Search Patient by Name:\n");
+    int searchId;
+    printf("\nSearch Patient by ID:\n");
 
-    printf("Enter patient name: ");
-    fgets(name, sizeof(name), stdin);
-    remove_newline(name);
-
+    printf("Enter patient ID: ");
+    if (scanf("%d", &searchId) != 1) {
+        printf("Invalid ID format.\n");
+        return;
+    }
+    while (getchar() != '\n');
     printf("\nResults:\n");
     int found = 0;
-
     for (int i = 0; i < patientCount; i++)
     {
-        if (strlen(name) == 0 || strstr(patientNames[i], name))
+        if (patientIds[i] == searchId)
         {
             printf("ID: %d | Name: %s | Age: %s | Ailment: %s | Doctor: %s | Status: %s | Type: %s | Admitted: %s",
                    patientIds[i], patientNames[i], patientAges[i],
@@ -130,51 +111,38 @@ int SearchFunctionality()
             printf("\n");
 
             found = 1;
+            break;
         }
     }
 
     if (!found)
     {
-        printf("No patients found with the name '%s'.\n", name);
+        printf("No patient found with the ID '%d'.\n", searchId);
     }
-
-    return 0;
 }
-int DailyReport() {
+void DailyReport() {
     char date[11];
-    printf("\nEnter Date for Report (YYYY-MM-DD): ");
+    printf("\nEnter today's date (YYYY-MM-DD): ");
     fgets(date, sizeof(date), stdin);
-    remove_newline(date);
-    int admittedFound = 0, dischargedFound = 0;
-    printf("\nAdmitted on %s:\n", date);
+    size_t len = strlen(date);
+    if (len > 0 && date[len - 1] == '\n') {
+        date[len - 1] = '\0';
+    }
+
+    int found = 0;
+    printf("\n--- Daily Report ---\n");
     for (int i = 0; i < patientCount; i++) {
-        if (compare_dates(admittedDates[i], date) == 0) {
-            printf("ID: %d | Name: %s | Ailment: %s | Doctor: %s | Room Type: %s\n",
-                   patientIds[i], patientNames[i], patientAilments[i], patientDoctors[i], patientTypes[i]);
-            admittedFound = 1;
+        if (strcmp(admittedDates[i], date) == 0) {
+            printf("ID: %d | Name: %s | Ailment: %s | Doctor: %s | Status: %s | Type: %s | Admitted: %s\n",
+                patientIds[i], patientNames[i], patientAilments[i], patientDoctors[i], patientStatus[i], patientTypes[i], admittedDates[i]);
+            found = 1;
         }
     }
-    if (!admittedFound) {
-        printf("No patients admitted on %s.\n", date);
-    }
 
-    printf("\nDischarged on %s:\n", date);
-    for (int i = 0; i < patientCount; i++) {
-        if (strlen(dischargedDates[i]) > 0 && compare_dates(dischargedDates[i], date) == 0) {
-            printf("ID: %d | Name: %s | Reason: %s | Doctor Remarks: %s\n",
-                   patientIds[i], patientNames[i], "Recovered", patientDoctors[i]);  // Assuming discharged patients' reason is "Recovered"
-            dischargedFound = 1;
-        }
+    if (!found) {
+        printf("No patients were admitted on this date.\n");
     }
-    if (!dischargedFound) {
-        printf("No patients discharged on %s.\n", date);
-    }
-
-    printf("\nBed Availability:\nTotal Beds: 100 | Beds Occupied: %d | Beds Available: %d\n", patientCount, 100 - patientCount);
-
-    return 0;
 }
-
 int BillingSystem()
 {
     char input[20];
@@ -188,6 +156,8 @@ int BillingSystem()
     {
         if (patientIds[i] == id)
         {
+            printf("Patient Name: %s\n", patientNames[i]);
+
             char start[11], end[11];
             strcpy(start, admittedDates[i]);
 
@@ -200,13 +170,13 @@ int BillingSystem()
                 printf("Enter today's date (YYYY-MM-DD): ");
                 fgets(end, sizeof(end), stdin);
                 remove_newline(end);
+            }
 
             int y1, m1, d1, y2, m2, d2;
-            scanf(start, "%d-%d-%d", &y1, &m1, &d1);
-            scanf(end, "%d-%d-%d", &y2, &m2, &d2);
+            sscanf(start, "%d-%d-%d", &y1, &m1, &d1);
+            sscanf(end, "%d-%d-%d", &y2, &m2, &d2);
             int days = (y2 - y1) * 365 + (m2 - m1) * 30 + (d2 - d1);
             if (days < 1) days = 1;
-
             int roomCharge = days * 500;
             printf("Days: %d\nRoom Charge: %d\nTotal: %d\n", days, roomCharge, roomCharge);
             return 0;
@@ -215,6 +185,24 @@ int BillingSystem()
     printf("Patient not found.\n");
     return 0;
 }
+void DisplayAllPatients()
+{
+    if (patientCount == 0)
+    {
+        printf("\nNo patient records available.\n");
+        return;
+    }
+
+    printf("\n--- All Patient Records ---\n");
+    for (int i = 0; i < patientCount; i++)
+    {
+        printf("ID: %d | Name: %s | Age: %s | Ailment: %s | Doctor: %s | Status: %s | Type: %s | Admitted: %s",
+               patientIds[i], patientNames[i], patientAges[i], patientAilments[i],
+               patientDoctors[i], patientStatus[i], patientTypes[i], admittedDates[i]);
+        if (strlen(dischargedDates[i]) > 0)
+            printf(" | Discharged: %s", dischargedDates[i]);
+        printf("\n");
+    }
 }
 int login()
 {
@@ -222,7 +210,6 @@ int login()
     const char validUser[] = "admin";
     const char validPass[] = "admin123";
     int attempts = 3;
-
     while (attempts--)
     {
         printf("Login\nUsername: ");
@@ -245,37 +232,14 @@ int login()
     printf("Too many failed attempts. Exiting.\n");
     return 0;
 }
-
-void DisplayAllPatients()
-{
-    if (patientCount == 0)
-    {
-        printf("\nNo patient records available.\n");
-        return;
-    }
-
-    printf("\n--- All Patient Records ---\n");
-    for (int i = 0; i < patientCount; i++)
-    {
-        printf("ID: %d | Name: %s | Age: %s | Ailment: %s | Doctor: %s | Status: %s | Type: %s | Admitted: %s",
-               patientIds[i], patientNames[i], patientAges[i], patientAilments[i],
-               patientDoctors[i], patientStatus[i], patientTypes[i], admittedDates[i]);
-        if (strlen(dischargedDates[i]) > 0)
-            printf(" | Discharged: %s", dischargedDates[i]);
-        printf("\n");
-    }
-}
-
 int main()
 {
     if (!login())
     {
         return 1;
     }
-
     char input[20];
     int choice;
-
     while (1)
     {
         printf("\nHospital Patient Management System\n");
@@ -283,8 +247,11 @@ int main()
 
         printf("Select: ");
         fgets(input, sizeof(input), stdin);
-        sscanf(input, "%d", &choice);
 
+        if (sscanf(input, "%d", &choice) != 1) {
+            printf("Invalid input. Please enter a number.\n");
+            continue;
+        }
         switch (choice)
         {
             case 1:
@@ -309,8 +276,5 @@ int main()
                 printf("Invalid choice. Please try again.\n");
         }
     }
-
-
     return 0;
-
 }
